@@ -1,0 +1,36 @@
+function [pathname] = uigetdir2(start_path, dialog_title)
+% Pick multiple directories and/or files
+% This function allows multiple files and/or directories to be selected.
+% It uses the standard uigetfile interface.
+%
+% Written by Tiago, 17 Aug 2011
+
+import javax.swing.JFileChooser;
+
+if nargin == 0 || start_path == '' || start_path == 0 % Allow a null argument.
+    start_path = pwd;
+end
+
+jchooser = javaObjectEDT('javax.swing.JFileChooser', start_path);
+
+jchooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+if nargin > 1
+    jchooser.setDialogTitle(dialog_title);
+end
+
+jchooser.setMultiSelectionEnabled(true);
+
+status = jchooser.showOpenDialog([]);
+
+if status == JFileChooser.APPROVE_OPTION
+    jFile = jchooser.getSelectedFiles();
+	pathname{size(jFile, 1)}=[];
+    for i=1:size(jFile, 1)
+		pathname{i} = char(jFile(i).getAbsolutePath);
+	end
+	
+elseif status == JFileChooser.CANCEL_OPTION
+    pathname = [];
+else
+    error('Error occured while picking file.');
+end

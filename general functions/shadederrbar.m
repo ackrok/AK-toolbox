@@ -54,7 +54,7 @@ function [main] = shadederrbar(x,y,sem,varargin)
     % plot(x,yerru,'-','Color',patchcolor); %Plots upper error line
     % plot(x,yerrl,'-','Color',patchcolor); %Plots lower error line
     fill(xpatch,ypatch,patchcolor,'FaceAlpha',0.5,'EdgeAlpha',0,'EdgeColor',patchcolor,'LineStyle','none'); %Creates the patch
-        main = plot(x,y,'-','Color',color,'HandleVisibility','off'); %Plots main data   
+        main = plot(x,y,'-','Color',color,'HandleVisibility','off','ColorMode','manual'); %Plots main data   
     % hold off
     
 end

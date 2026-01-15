@@ -1,9 +1,10 @@
-function [stderrmean] = SEM(signal,dimension)
+function [stderrmean] = SEM(varargin)
 
 % Created by: Anya Krok
 % Created on: 26 June 2018
 % Description: calculate standard error of mean
 %
+% [sem] = SEM(signal)
 % [sem] = SEM(signal,dimension)
 %
 % INPUT
@@ -14,6 +15,18 @@ function [stderrmean] = SEM(signal,dimension)
 %
 % OUTPUT
 %   stderrmean: scaler or vector of standard error of mean along specified dimension
+
+switch nargin
+    case 2
+        signal = varargin{1};
+        dimension = varargin{2};
+    case 1
+        signal = varargin{1};
+        if all(size(signal)>1); 
+            error('ERROR: must specify dimension if input is matrix.') 
+        end
+        dimension = find(size(signal) ~= 1); % Default dimension to one with multiple values
+end
 
 stderrmean = nanstd(signal,0,dimension)/sqrt(size(signal,dimension));
 

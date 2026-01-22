@@ -1,4 +1,4 @@
-function [dF,baseline] = baselineFP(FP,interpType,fitType,basePrc,winSize,winOv,Fs)
+function [dF,baseline,expFit] = baselineFP(FP,interpType,fitType,basePrc,winSize,winOv,Fs)
 %baselinePhotometry - Baseline adjust photometry signal to get dF/F
 %
 %   [dF_F,varargout] = baselineFP(FP,interpType,fitType,basePrc,winSize,winOv,Fs)

@@ -1,13 +1,13 @@
-function [dF, baseline] = baselineFP_monoexp(FP, Fs, basetime)
-% Baseline adjust photometry signal using mono-exponential decay function 
-% fit to a specified baseline portion of signal
+function [dF, baseline] = baselineFP_exp(FP, Fs, baseWin)
+% Baseline adjust photometry signal using mono or double exponential decay 
+% function fit to a specified baseline portion of signal
 % 
-% [dF, baseline] = baselineFP_monoexp(FP, Fs, basetime)
+% [dF, baseline] = baselineFP_exp(FP, Fs, baseWin)
 %
 % INPUT:
 % 'FP' - photometry signal to baseline
 % 'Fs' - sampling frequency
-% 'basetime' - set baseline range from 1:X (in seconds)
+% 'baseWin' - set baseline range from 1:X (in seconds)
 %
 % OUTPUT:
 % 'dF_F' - baseline adjusted trace (%dF_F)
@@ -20,20 +20,26 @@ function [dF, baseline] = baselineFP_monoexp(FP, Fs, basetime)
 time    = linspace(0, length(FP)/Fs, length(FP))';
 
 % parse baseline portion of signal 
-[~,idx_base] = min(abs(time - basetime)); % baseline is first X seconds of trace
+[~,idx_base] = min(abs(time - baseWin)); % baseline is first X seconds of trace
 idx_base = 1:idx_base;
 t_base  = time(idx_base); % baseline time vector
 y_base  = FP(idx_base);   % baseline signal
 
 % model: mono-exponential decay function, a*exp(-x/tau) + c
-ft = fittype('a*exp(-x/tau)+c','independent','x','coefficients',{'a','tau','c'});
-opts = fitoptions(ft);
-opts.StartPoint = [max(FP)-median(FP), (time(end)-time(1))/5, median(FP)];
-opts.Lower = [0, 0, -Inf];
-[fo,gof] = fit(t_base, y_base, ft, opts);
-baseline = fo.a*exp(-time./fo.tau) + fo.c;
+% ft = fittype('a*exp(-x/tau)+c','independent','x','coefficients',{'a','tau','c'});
+% opts = fitoptions(ft);
+% opts.StartPoint = [max(FP)-median(FP), (time(end)-time(1))/5, median(FP)];
+% opts.Lower = [0, 0, -Inf];
+% [fitted, ~] = fit(t_base, y_base, ft, opts);
+% baseline = fitted.a*exp(-time./fitted.tau) + fitted.c;
 
-% dF/F
+% alternative model: double exponential decay function, a*exp(-x/tau1) + b*exp(-x/tau2) + c
+ft = fittype('exp2');
+opts = fitoptions(ft);
+[fitted, ~] = fit(t_base, y_base, ft, opts);
+baseline = feval(fitted, time);
+
+% baseline-corrected signal (dF/F)
 dF = (FP - baseline)./baseline;
 dF = dF*100; % convert to %
 

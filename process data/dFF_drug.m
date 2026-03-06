@@ -23,13 +23,11 @@ function out = dFF_drug(signal, Fs, winBase)
 %computation
 signal = signal(:);
 winBase = winBase * Fs; %Convert window from seconds to samples
+if winBase(1) == 0; winBase(1) = 1; end
 baseline = signal( winBase(1) : winBase(2) ); 
-
 Ls = length(signal); %Get length of photometry trace
-L = 1:Ls; L = L'; %Create a column vector from 1 to total data points in trace
-nPts = floor(Ls/(winSize-winOv)); %Determine number of baseline points to be found
 
-%Baseline 
+%Baseline signal
 % (1) use baseline FP to identify baseline of specified window using a
 %     moving window and finding values within a specified percentile
 interpType = 'linear'; % 'linear' 'spline' 
@@ -38,10 +36,11 @@ basePrc = 50; % Percentile value from 1 - 100 to use when finding baseline
 %Note: Lower prc are used because the mean of signal is not true baseline
 winSize = 10; % Window size for baselining in seconds
 winOv = 0; %Window overlap size in seconds
-[~, outbaseline, ~] = baselineFP (baseline,interpType,fitType,basePrc,winSize,winOv,Fs);
+[~, outbaseline] = baselineFP (baseline,interpType,fitType,basePrc,winSize,winOv,Fs);
 meanbaseline = mean(outbaseline);
-% (2) mean of baseline
-meanbaseline = mean(baseline);
+
+% (2) compute mean baseline
+% meanbaseline = mean(baseline);
 
 % Computer dF/F of entire signal
 dFF = (signal - meanbaseline) ./ meanbaseline;

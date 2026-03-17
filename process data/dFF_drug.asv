@@ -20,8 +20,6 @@ function [sig_dff, sig_z] = dFF_drug(signal, Fs, baseWin)
 signal = signal(:); % ensure column vector for faster computation
 nSig   = numel(signal); % number of samples
 time   = makeTime(nSig, Fs); % create time vector
-sig_dff = nan(nSig,1); % initialize empty vector
-sig_z   = nan(nSig,1); % initialize empty vector
 
 % remove artifact of resampling in first half second of session
 signal(1:round(Fs/2)) = signal(round(Fs/2));
@@ -49,17 +47,12 @@ fitstretch = movmean(fitstretch, 5*Fs); % smooth edges by 5 seconds
 detrend = sigFilt - fitstretch;
 
 %% compute dF/F
-F0 = mean(detrend(mask));
-% If F0 is too close to zero or negative, add a constant offset
-if F0 <= 0 || abs(F0) < 1e-6
-    offset = mean(sigFilt(mask));   % use raw baseline level as DC offset
-    detrend = detrend + offset;
-    F0 = mean(detrend(mask));
-sig_dff = (detrend - F0) ./ F0;
+sig_dff = (sigFilt - fitstretch) ./ fitstretch; 
 
 %% z-score
+base_mu = mean(detrend(mask));
 base_std = std(detrend(mask));
-sig_z = (detrend - F0) ./ base_std;
+sig_z = (detrend - base_mu) ./ base_std;
 
 %% PLOT
 % fig = figure; theme(fig, 'light');
@@ -68,8 +61,8 @@ sig_z = (detrend - F0) ./ base_std;
 % plot(time, fitstretch, 'r', 'LineWidth',2);
 % xline(baseWin,'LineWidth',2);
 % xlabel('Time (s)'); ylabel('F');
-% legend('rawFP', 'baseline');
-% title('raw photometry and baseline fit');
+% legend('rawFP', 'baseline exp2');
+% title('Raw signal and exponential fit');
 % 
 % sp(2) = subplot(3,1,2); hold on
 % plot(time, sig_dff, 'm');

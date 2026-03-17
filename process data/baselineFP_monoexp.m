@@ -1,11 +1,11 @@
-function [dF, baseline] = baselineFP_exp(FP, Fs, baseWin)
+function [dF, baseline] = baselineFP_monoexp(signal, Fs, baseWin)
 % Baseline adjust photometry signal using mono or double exponential decay 
 % function fit to a specified baseline portion of signal
 % 
-% [dF, baseline] = baselineFP_exp(FP, Fs, baseWin)
+% [dF, baseline] = baselineFP_monoexp(signal, Fs, baseWin)
 %
 % INPUT:
-% 'FP' - photometry signal to baseline
+% 'signal' - photometry signal to baseline
 % 'Fs' - sampling frequency
 % 'baseWin' - set baseline range from 1:X (in seconds)
 %
@@ -17,13 +17,13 @@ function [dF, baseline] = baselineFP_exp(FP, Fs, baseWin)
 %
 
 % generate time vector for processing
-time    = linspace(0, length(FP)/Fs, length(FP))';
+time    = linspace(0, length(signal)/Fs, length(signal))';
 
 % parse baseline portion of signal 
 [~,idx_base] = min(abs(time - baseWin)); % baseline is first X seconds of trace
 idx_base = 1:idx_base;
 t_base  = time(idx_base); % baseline time vector
-y_base  = FP(idx_base);   % baseline signal
+y_base  = signal(idx_base);   % baseline signal
 
 % model: mono-exponential decay function, a*exp(-x/tau) + c
 % ft = fittype('a*exp(-x/tau)+c','independent','x','coefficients',{'a','tau','c'});
@@ -40,7 +40,7 @@ opts = fitoptions(ft);
 baseline = feval(fitted, time);
 
 % baseline-corrected signal (dF/F)
-dF = (FP - baseline)./baseline;
+dF = (signal - baseline)./baseline;
 dF = dF*100; % convert to %
 
 end

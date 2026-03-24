@@ -1,125 +1,135 @@
-function [out] = dFF_drug(signal, Fs, baseWin)
-% Process photometry signal using predrug baseline.
+function [out] = detrendFP_drug(signal, Fs, win)
+% Detrend photometry signal using pre-drug baseline.
 %
-%   [out] = dFF_drug(signal, Fs, baseWin)
+%   [out] = detrendFP_drug(signal, Fs, win)
 %
-% Description: This code will baseline adjust the photometry signal using
-% baseline period, prior to drug administration
+% Description: This code will detrend photometry signal using values from 
+% specified baseline period (eg, pre drug injection) with a variety of
+% methods.
 %
 % Input:
-%    signal - photometry signal to baseline (column vector)
-%    Fs - sampling rate, in Hz (scalar)
-%    winBase - baseline range from 1:X in seconds (scalar)
+%    signal - photometry signal to detrend (vector)
+%    Fs     - sampling rate, in Hz (scalar)
+%    win    - time point, in seconds, that defines end of baseline (scalar)
+%       --> baseline will be signal(1:winBase*Fs);
 %
 % Output:
-%    out - structure with output variables including
-%       out.dff - processed photometry signal, as deltaF/F
-%       out.z   - processed photometry signal, z-scored
-%    fittedTrend - fitted baseline trend
+%    out - structure with variables including
+%       out.signal - input signal (vector)
+%       out.stretch, stitch, exp2stitch, exp2base - varied trends fits (vectors)
+%       out.lbl - name of trend used to compute dFF, z-score (char array)
+%       out.dff - processed photometry signal, units deltaF/F (vector)
+%       out.z   - processed photometry signal, units z-score (vector)
 %
 % Author: Anya Krok, March 2026
+% Last Updated: March 24 2026
+
 %%
 plotY  = false; % plotting logical, default false
 signal = signal(:); % ensure column vector for faster computation
 nSig   = numel(signal); % number of samples
 time   = makeTime(nSig, Fs); % create time vector
 
-% remove artifact of resampling in first half second of session
-signal(1:round(Fs/2)) = signal(round(Fs/2));
+%% define parameters
+sm = 100; % sliding window length for smoothing baseline, in seconds
+
+%% initial processing of signal
+signal(1:round(Fs/2)) = signal(round(Fs/2)); % remove artifact of 
+% resampling in first half second of session
 
 % low-pass filter data
 cutoff = 15; % cut-off frequency for filter
-order = 8; % order of the filter
+order  = 8; % order of the filter
 y_full = filterFP(signal,Fs,cutoff,order,'lowpass');
 y_full = y_full(:); 
 
-% define baseline
-mask = 1 : baseWin*Fs; % create baseline mask
+%% define baseline
+mask   = 1 : win*Fs; % create baseline mask
 t_base = time(mask(:));
-y_base = signal(mask(:)); 
-nBase = numel(y_base);
+y_base = y_full(mask(:)); 
+nBase  = numel(y_base);
 
 %% create artificial bleaching curve using baseline
-sm = 100; % smooth baseline to keep only slow bleaching dynamics
+% (1) smoothing baseline to keep only slow bleaching dynamics
 basesm = movmean(y_base, round(sm*Fs)); 
-% stretch (resample) smooth baseline to full length
+% (2) stretch (aka resample) smooth baseline to full length
 stretch = resample(basesm, nSig, nBase); % stretched baseline trend
 stretch = stretch(:);
 stretch = movmean(stretch, sm*Fs); % smooth edges
 
-%% combo stitch baseline and stretch at transition point
-% March 21 2026
-maskBaseEnd = nBase-Fs : nBase; % mask for section of baseline
-offset = mean(stretch(maskBaseEnd)) - mean(basesm(maskBaseEnd)); % offset for stretch above baseline end
-adj = stretch - offset;
-%
+%% stitched baseline trend
 stitch = zeros(nSig,1); % initialize
 stitch(mask) = basesm; % use smooth non-stretched baseline for baseline period
-stitch(nBase+1:end) = adj(nBase+1:end); % remainder of signal
-%
-bw = 10; % transition window to smooth residual step, in seconds
+% At baseline end, stretch has offset from baseline due to resample
+% process. In order to stitch without jump will need to subtract offset.
+maskBaseEnd = nBase-Fs : nBase; % mask for last second of baseline
+offset = mean(stretch(maskBaseEnd)) - mean(basesm(maskBaseEnd));
+stretch_offset = stretch - offset;
+stitch(nBase+1:end) = stretch_offset(nBase+1:end); % add to output
+% Smooth vector to remove discontinuities, residual steps
+bw = 10; % transition window, in seconds
 j0 = nBase;
 j1 = min(nSig, nBase + bw);
 tau = (0:(j1-j0)) / max(1,(j1-j0));
 wblend = 0.5*(1 + cos(pi * tau)); % 1 -> 0
 for k = 0:(j1-j0); idx = j0 + k; a = wblend(k+1);
-    stitch(idx) = a * basesm(min(idx, nBase)) + (1 - a) * adj(idx);
+    stitch(idx) = a * basesm(min(idx, nBase)) + (1 - a) * stretch_offset(idx);
 end
-stitch = movmean(stitch, sm*Fs); % 1 s smoothing to remove tiny discontinuities
+stitch = movmean(stitch, sm*Fs); % smoothing again
 
-%% fit a double exponential model to the stitch
-% March 23 2026
-y_forexp2 = stitch;
+%% fit double exponential model to stitch
+y_toFit = stitch;
 fo = fitoptions('exp2',...
     'Lower', [-Inf, -Inf, -Inf, -Inf], ... % constrain so exponents are non-positive (force decays)
     'Upper', [Inf, 0, Inf, 0]);
-f = fit(time, y_forexp2, 'exp2', fo); % perform fit on stitch
-exp2stitch = feval(f, time);
+f = fit(time, y_toFit, 'exp2', fo); % can compute coefficients over full session because y-input is full stitched trend
+exp2stitch = feval(f, time); % evaluate over full session
 
-%% double exponential model
-% March 20 2026
-y_forexp2 = movmean(y_base, round(50*Fs)); 
+%% fit double exponential model to baseline values
+y_toFit = basesm;
 fo = fitoptions('exp2', ...
     'Lower', [-Inf, -Inf, -Inf, -Inf], ... % constrain so exponents are non-positive (force decays)
     'Upper', [Inf, 0, Inf, 0], ...
-    'StartPoint', [max(y_base)-median(y_base), -1/baseWin, 0.5*(max(y_base)-median(y_base)), -0.1/baseWin]);
-f = fit(t_base, y_forexp2, 'exp2', fo);
-exp2base = f(time);
+    'StartPoint', [max(y_toFit)-median(y_toFit), -1/win, 0.5*(max(y_toFit)-median(y_toFit)), -0.1/win]);
+f = fit(t_base, y_toFit, 'exp2', fo); % compute coefficients only over baseline period
+exp2base = feval(f, time); % evaluate over full session
 
-%% compute dF/F
+%% compute dF/F and z-score
+% select fit to detrend signal
 trend = exp2stitch; lbl = 'exp2stitch'; % CHANGE
 % trend = stretch; lbl = 'stretch'; % CHANGE
 % trend = stitch; lbl = 'stitch'; % CHANGE
 % trend = exp2base; lbl = 'exp2base'; % CHANGE
-
-detrend = y_full(:) - trend(:); 
+%
+detrend = y_full(:) - trend(:);
+%
+% compute dF/F
 F0 = mean(detrend(mask));
-% If F0 is too close to zero or negative, add a constant offset
-if F0 <= 0 || abs(F0) < 1e-3
-    offset = mean(y_full(mask));   % use raw baseline level as DC offset
+if F0 <= 1e-3 % if F0 is too small or negative will add offset
+    offset = mean(y_base); % use average of baseline as DC offset
     detrend = detrend + offset;
-    F0 = mean(detrend(mask)); 
+    F0 = F0 + offset;
 end
 sig_dff = (detrend - F0) ./ F0;
-
-%% z-score
-base_std = std(detrend(mask));
-sig_z = (detrend - F0) ./ base_std;
+%
+% compute z-score
+sigma = std(detrend(mask));
+sig_z = (detrend - F0) ./ sigma;
 
 %% output 
 out = struct;
-out.sig = signal;  % input signal
+out.signal = signal;  % input signal
 out.Fs  = Fs;      % input sampling frequency
-out.win = baseWin; % baseline window
+out.win = win; % baseline window
 out.y   = y_full;  % signal after low-pass filtering
 out.dff = sig_dff; % units: dF/F
 out.z   = sig_z;   % units: z-score
-out.trend = lbl;   % label of trend utilized for dff, z-score
-out.basesm = basesm; % smooth baseline
+out.lbl = lbl;     % label of trend utilized for dff, z-score
+out.basesm = basesm;   % smooth baseline
 out.stretch = stretch; % stretch trend
-out.stitch = stitch;   % stitch trend of smooth baseline and offset stretch
-out.exp2stitch = exp2stitch; % double exp model fit from stitch trend
-out.exp2base = exp2base;    % double exp model fit from baseline
+out.stitch = stitch;   % stitched trend (smooth baseline with offset stretch)
+out.exp2stitch = exp2stitch; % double exp model fit to stitch trend
+out.exp2base = exp2base;     % double exp model fit to baseline values only
 
 %% PLOT
 if plotY
@@ -127,20 +137,20 @@ if plotY
     sp(1) = subplot(3,1,1);
     plot(time, signal, 'g'); hold on;
     plot(time, trend, 'r', 'LineWidth',2);
-    xline(baseWin,'LineWidth',2);
+    xline(win,'LineWidth',2);
     xlabel('Time (s)'); ylabel('F');
     legend('rawFP', 'baseline');
     title('raw photometry and baseline fit');
     
     sp(2) = subplot(3,1,2); hold on
     plot(time, sig_dff, 'm');
-    xline(baseWin,'LineWidth',2);
+    xline(win,'LineWidth',2);
     xlabel('Time (s)'); ylabel('\DeltaF/F');
     title('\DeltaF/F');
     
     sp(3) = subplot(3,1,3); hold on
     plot(time, sig_z, 'm');
-    xline(baseWin,'LineWidth',2);
+    xline(win,'LineWidth',2);
     xlabel('Time (s)'); ylabel('z-score');
     title('z-score');
     
@@ -148,12 +158,12 @@ if plotY
 end
 
 %% Plot to inspect
-% fig = figure; theme(fig, 'light');
-% plot(time, signal, 'k', 'DisplayName','signal'); hold on;
-% plot(time(1:nBase), base, 'bo-', 'DisplayName','baseline smoothed (no stretch)');
-% plot(time, exp2, 'g--', 'LineWidth',2,'DisplayName','exp2'); 
-% plot(time, stretch, 'r--', 'DisplayName','stretched baseline (full)');
-% plot(time, trend, 'm-', 'LineWidth',1.6, 'DisplayName','combined fittedTrend');
+% fig = figure; theme(fig, 'light'); hold on;
+% plot(time, signal, 'k', 'DisplayName','signal');
+% plot(t_base, basesm, 'c--', 'DisplayName','baseline smoothed');
+% plot(time, stitch, 'b', 'DisplayName','stitch');
+% plot(time, exp2stitch, 'r', 'DisplayName','exp2stitch');
+% plot(time, exp2base, 'g', 'DisplayName','exp2base');
 % xlim([min(time) max(time)]);
 % legend('Location','best'); xlabel('Time'); ylabel('Signal / trend');
 % title('Baseline: smooth (baseline) stitched with stretched baseline (post)');

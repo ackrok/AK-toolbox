@@ -1,10 +1,10 @@
-function [out] = detrendFP_drug(signal, Fs, win, varargin)
+function [out] = detrend_drug(signal, Fs, win, varargin)
 % This function will detrend photometry signal using a trend curve fitted
 % to the data in specified baseline window (eg, pre drug injection).
 %
 % Syntax:
-%   [out] = detrendFP_drug(signal, Fs, win);
-%   [out] = detrendFP_drug(signal, Fs, win, trendLbl);
+%   [out] = detrend_drug(signal, Fs, win);
+%   [out] = detrend_drug(signal, Fs, win, trendLbl);
 %
 % Inputs:
 %    signal - photometry signal to detrend (vector)

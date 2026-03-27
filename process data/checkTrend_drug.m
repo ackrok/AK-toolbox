@@ -16,5 +16,6 @@ for b = 1:nFPchan
         dff = getdff_drug(out.y, out.trend.(chosen), Fs, win);
         comb(a).dff(:,b) = dff;
         comb(a).trend{b} = chosen; 
+        % close(fig);
     end
 end

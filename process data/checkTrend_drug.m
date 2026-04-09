@@ -1,11 +1,10 @@
 % check on signal
 %%
 win = 600;
-nFPchan = 2;
+nFPchan = 1;
 opts = {'exp2stitch','exp2base','stitch','stretch'};
 
 for b = 1:nFPchan
-    fig = figure; theme(fig,'light');
     for a = 1:length(comb)
         signal = comb(a).FP{b}; Fs = comb(a).Fs;
         out = detrend_drug(signal, Fs, win);
@@ -16,6 +15,6 @@ for b = 1:nFPchan
         dff = getdff_drug(out.y, out.trend.(chosen), Fs, win);
         comb(a).dff(:,b) = dff;
         comb(a).trend{b} = chosen; 
-        % close(fig);
+        close(fig);
     end
 end

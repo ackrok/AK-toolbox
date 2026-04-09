@@ -18,6 +18,7 @@ function [data] = processDual(data,params)
 %   - data - Updated data structure containing processed data
 %
 %   Author: Pratik Mistry 2019
+%   Last Edited by Anya Krok, April 2026
 
 %Pull parameters required for this analysis
 nAcq = length(data.acq);
@@ -58,7 +59,13 @@ for x = 1:nAcq
 %         modFreq = inputdlg(['Enter Modulation Frequency for: ',FPnames{y}]); %Ask for modulation frequency
 %         modFreq = str2double(modFreq{1}); %Convert string input to a double
         modFreq = params.FP.modFreq(y); % ANYA EDIT 21/04/06
-        ref = findRef(modFreq,refSig,rawFs); %Find the reference signal from the refsig array using modulation frequency
+        try 
+            ref = findRef(modFreq,refSig,rawFs); %Find the reference signal from the refsig array using modulation frequency
+        catch
+            % if unable to identify reference, create new sinusoid
+            yfun = @(t) sin(2 * pi * modFreq * t) + 2;
+            ref = yfun(data.acq.time);
+        end
         demod = digitalLIA(rawFP,ref,modFreq,rawFs,lpCut,filtOrder); %Peform the demodulation
         if sigEdge ~= 0 %Remove the beginning and the edge if the setting isn't 0
             demod = demod((sigEdge*rawFs)+1:end-(sigEdge*rawFs));

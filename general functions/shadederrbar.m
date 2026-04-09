@@ -44,11 +44,11 @@ function [main] = shadederrbar(x,y,sem,varargin)
     end
     patchcolor=color+(1-color)*.8; %Creates the patch color
     
-    yerru=y+sem;
-    yerrl=y-sem;
+    yerru = y + sem;
+    yerrl = y - sem;
     
-    xpatch=[x,fliplr(x)]; %Creates x axis for the path
-    ypatch=[yerru,fliplr(yerrl)]; %Creates y axis for patch
+    xpatch=[x, fliplr(x)]; %Creates x axis for the path
+    ypatch=[yerru, fliplr(yerrl)]; %Creates y axis for patch
     
     hold on
     % plot(x,yerru,'-','Color',patchcolor); %Plots upper error line

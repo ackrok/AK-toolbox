@@ -1,4 +1,5 @@
 function [data] = processDual(data,params)
+
 %Process Dual Color Photometry
 %
 %   [data] = processDual(data,params)
@@ -58,7 +59,7 @@ for x = 1:nAcq
         rawFP = data.acq(x).FP{y,1}; %Extract FP trace
 %         modFreq = inputdlg(['Enter Modulation Frequency for: ',FPnames{y}]); %Ask for modulation frequency
 %         modFreq = str2double(modFreq{1}); %Convert string input to a double
-        modFreq = params.FP.modFreq(y); % ANYA EDIT 21/04/06
+        modFreq = params.FP.modFreq(y); % ANYA EDIT 2021-04-06
         try 
             ref = findRef(modFreq,refSig,rawFs); %Find the reference signal from the refsig array using modulation frequency
         catch
@@ -85,4 +86,4 @@ for x = 1:nAcq
     Ls = length(1:dsRate:Ls); timeVec = [1:Ls]/Fs;
     data.final(x).time = timeVec';
 end
-end
+data.gen.params.FP.acqType = 'freqmod';

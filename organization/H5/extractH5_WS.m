@@ -33,7 +33,6 @@ data = sub_extractHeader(data,h5Header,h5file); %Calls a function to extract hea
 %into a new format
 clear tmpStimLib; %Clear the temporary stimulus library to free up space
 data = sub_extractScans(data,h5Struct,h5file); %Pull the traces into a field within the struct
-data.ClockAtRunStart = [data.header.ClockAtRunStart];
 end
 
 function data = sub_extractHeader(data,h5Header,h5file)

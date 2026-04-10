@@ -58,3 +58,4 @@ for n = 1:nAcq
     timeVec = [1:L]/Fs;
     data.final(n).time = timeVec';
 end
+data.gen.params.FP.acqType = 'regular';

@@ -22,12 +22,12 @@ switch nargin
         dimension = varargin{2};
     case 1
         signal = varargin{1};
-        if all(size(signal)>1); 
+        if all(size(signal)>1) 
             error('ERROR: must specify dimension if input is matrix.') 
         end
         dimension = find(size(signal) ~= 1); % Default dimension to one with multiple values
 end
 
-stderrmean = nanstd(signal,0,dimension)/sqrt(size(signal,dimension));
+stderrmean = std(signal,0,dimension,'omitnan')/sqrt(size(signal,dimension));
 
 end

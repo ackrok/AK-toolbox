@@ -13,7 +13,7 @@ function time = makeTime(nSamp, Fs)
 %
 % Anya Krok, January 2026
 
-time = linspace(0, nSamp/Fs, nSamp); % time vector
+time = linspace(1/Fs, nSamp/Fs, nSamp); % time vector
 time = time(:); % make into column vector
 
 

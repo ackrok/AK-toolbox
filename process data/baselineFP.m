@@ -87,6 +87,6 @@ switch fitType
 end
 
 dF = (FP-baseline)./baseline;
-% dF = dF*100;
+dF = dF*100;
 
 end

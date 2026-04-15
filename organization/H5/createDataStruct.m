@@ -34,9 +34,9 @@ for x = 1:nTraces
     traceNames{x} = tName;
     %Following line asks the user to select the type for the trace
     switch tName % AK added 220921
-        case {'ACh','DA','dLight','rACh','rDA','5-HT'}
+        case {'ACh','DA','dLight','rACh','rDA','5-HT','5HT'}
             choice = 1;
-        case {'Ref_ACh','Ref_DA','ref_ACh','ref_DA','ref_green','ref_red','Ref_green','Ref_red'}   
+        case {'Ref_ACh','Ref_DA','ref_ACh','ref_DA','ref_green','ref_red','Ref_green','Ref_red','ref470','ref565'}   
             choice = 2;
         case {'Wheel','wheel'}
             choice = 3;

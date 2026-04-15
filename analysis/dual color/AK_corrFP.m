@@ -52,9 +52,9 @@ for x = 1:length(beh) % iterate over all recordings
     %% extract signals
     fp_mat = [];
     fp_mat(:,1) = beh(x).FP{y(1)}; Fs = beh(x).Fs; % extract photometry signal from structure, which will be used as reference
-    fp_mat(:,1) = fp_mat(:,1) - nanmean(fp_mat(:,1)); % subtract baseline (mean of entire photometry signal) from fp
+    fp_mat(:,1) = fp_mat(:,1) - mean(fp_mat(:,1),'omitnan'); % subtract baseline (mean of entire photometry signal) from fp
     fp_mat(:,2) = beh(x).FP{y(2)}; % extract photometry signal from structure
-    fp_mat(:,2) = fp_mat(:,2) - nanmean(fp_mat(:,2)); % subtract baseline (mean of entire photometry signal) from fp
+    fp_mat(:,2) = fp_mat(:,2) - mean(fp_mat(:,2),'omitnan'); % subtract baseline (mean of entire photometry signal) from fp
     
     %% adjust indices to retain if within specified window
     if nargin == 2

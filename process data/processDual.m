@@ -49,7 +49,7 @@ for x = 1:nAcq
     FPnames = data.acq(x).FPnames; %Pull names of the FP channels
     data.final(x).FPnames = FPnames;
     data.final(x).nFPchan = nFP;
-    refSig = data.acq(x).refSig; %Pull reference signals
+    % refSig = data.acq(x).refSig; %Pull reference signals % shifted later
     %The following line initializes the cell array for the final photometry
     %data
     data.final(x).FP = cell(nFP,1); data.final(x).nbFP = cell(nFP,1); data.final(x).FPbaseline = cell(nFP,1);
@@ -61,6 +61,7 @@ for x = 1:nAcq
 %         modFreq = str2double(modFreq{1}); %Convert string input to a double
         modFreq = params.FP.modFreq(y); % ANYA EDIT 2021-04-06
         try 
+            refSig = {data.acq(x).refSig{y}}; %Pull reference signals
             ref = findRef(modFreq,refSig,rawFs); %Find the reference signal from the refsig array using modulation frequency
         catch
             % if unable to identify reference, create new sinusoid

@@ -6,7 +6,10 @@ opts = {'exp2stitch','exp2base','stitch','stretch'};
 
 for b = 1:nFPchan
     for a = 1:length(comb)
-        signal = comb(a).FP{b}; Fs = comb(a).Fs;
+        if isfield(comb,'nbFP'); signal = comb(a).nbFP{b};
+            else, signal = comb(a).FP{b}; 
+        end
+        Fs = comb(a).Fs;
         out = detrend_drug(signal, Fs, win);
         [ax, fig] = plotTrend_drug(out);
         ID = [comb(a).mouse,'-',comb(a).date];

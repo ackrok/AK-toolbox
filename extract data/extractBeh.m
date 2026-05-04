@@ -53,11 +53,15 @@ function beh = extractBeh(varargin)
 
         %% PHOTOMETRY
         beh(x).Fs = data.gen.Fs; % Sampling frequency, in Hz
-        beh(x).time = data.final.time; % Time vector
         if isfield(data.final,'FP')
             beh(x).FP = data.final.FP;
             beh(x).nbFP = data.final.nbFP; % Photometry signal(s)
             beh(x).FPnames = data.final.FPnames; % Names of photometry signal(s)
+            if isfield(data.final,'time')
+                beh(x).time = data.final.time; % Time vector
+            else
+                beh(x).time = makeTime(numel(beh(x).FP{1}),beh(x).Fs);
+            end
         end
 
         %% LOCOMOTION

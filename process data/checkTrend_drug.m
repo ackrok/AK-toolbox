@@ -1,7 +1,7 @@
 % check on signal
 %%
-win = 600;
-nFPchan = 1;
+win = 15*60;
+nFPchan = 2;
 opts = {'exp2stitch','exp2base','stitch','stretch'};
 
 for b = 1:nFPchan

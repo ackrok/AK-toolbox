@@ -46,7 +46,7 @@ for x = 1:nTraces
             choice = 6;
         otherwise    
             choice = menu(['Select an option for trace: ',tName],'Photometry','Reference',...
-                'Wheel Encoder','Opto Pulses','Reward Behavior','Lick','Camera Trigger','Delete');
+                'Wheel Encoder','Opto Pulses','Reward Behavior','Lick','Camera Trigger','TTL','Delete');
     end
     traceType(x) = choice;
 end
@@ -54,6 +54,7 @@ for sweepNum = 1:nSweeps
     Ls = size(wsData.sweeps(sweepNum).allData,1);
     FPind = 1; RefInd = 1; %Need to initialize index for FP and Ref sigs because there may be multiple
     RewInd = 1; LickInd = 1; %Initialize index for Reward, Lick sigs because may be multiple
+    ttlInd = 1;
     for n = 1:nTraces
         %Following line asks the user to select the type for the trace
         choice = traceType(n);
@@ -85,6 +86,10 @@ for sweepNum = 1:nSweeps
             case 7
                 data.acq(sweepNum).cam   = wsData.sweeps(sweepNum).allData(:,n);
             case 8
+                data.acq(sweepNum).ttl{ttlInd,1} = wsData.sweeps(sweepNum).allData(:,n);
+                data.acq(sweepNum).ttlNames{ttlInd,1} = traceNames{n};
+                ttlInd = ttlInd+1;
+            case 9
                 
         end
     end

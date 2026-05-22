@@ -1,11 +1,11 @@
 % check on signal
 %%
-win = 15*60;
-nFPchan = 2;
+win = 14*60;
+nFPchan = 1;
 opts = {'exp2stitch','exp2base','stitch','stretch'};
 
 for b = 1:nFPchan
-    for a = 1:length(comb)
+    for a = 8:10
         if isfield(comb,'nbFP'); signal = comb(a).nbFP{b};
             else, signal = comb(a).FP{b}; 
         end

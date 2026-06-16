@@ -9,8 +9,8 @@ function [sta, time, sta_z] = getSTA(signal, events, Fs, window)
 % INPUT
 %   'signal' - vector with signal that you wish to align to events, in
 %   sampling frequency defined by Fs
-%   'Fs' - sampling frequency of signal
 %   'events'  -  vector with event times, in seconds
+%   'Fs' - sampling frequency of signal
 %   'window' - window to analyze around events, in seconds
 %
 % OUTPUT

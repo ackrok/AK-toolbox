@@ -47,7 +47,7 @@ time   = makeTime(nSig, Fs); % create time vector
 % cutoff = 15; % cut-off frequency for filter
 % order  = 8; % order of the filter
 y_full = filterFP(signal,Fs,cutoff,order,'lowpass');
-y_full = y_full; 
+y_full = y_full(:); 
 
 %% define baseline
 mask   = 1 : win*Fs; mask = mask(:); % baseline mask
